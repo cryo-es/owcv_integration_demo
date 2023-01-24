@@ -6,3 +6,4 @@ It's mainly to give people in Furi's server something to play with, and also I g
 Known Issues:
 - Resolutions other than 1920x1080 probably don't work (templates/masks need to be scaled)
 - Detecting resurrect in Kiriko ult probably won't work
+- Might have a performance impact because I haven't capped how often it reads the screen
