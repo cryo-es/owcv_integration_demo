@@ -1,17 +1,22 @@
-Before using:
+If you're opening this in Notepad:
+It's easier to read with Word Wrap enabled.
+Click Format > Word Wrap.
+
+Before running the exe for the first time:
 Open config.ini and toggle off any features you don't want.
 
 Settings you might want to change:
 BEEP_ENABLED = False (disables the debug beep each time vibe intensity changes, some may want this on)
-USING_INTIFACE = True (enables the connection to intiface)
+USING_INTIFACE = True (enables the connection to Intiface, leave it as False if you don't want to connect a toy)
 PLAYING_MERCY = False (if you're not planning to play Mercy, set to False for better performance)
 
 Notes:
 This is very much just a prototype/demo, I threw the vibrator part of this together in an afternoon
-It's mainly to give people in Furi's server something to play with
-And also I guess to demonstrate an example of integrating with my OW2 CV project
+It's mainly to give people in Furi's server something to play with and also I guess to demonstrate an example of integrating with my OW2 CV project
 
 Known Issues:
+- Crashes shortly after launch if you don't have a device connected to Intiface (probably)
 - Resolutions other than 1920x1080 probably don't work (templates/masks need to be scaled)
 - Detecting resurrect in Kiriko ult probably won't work
+- Operating systems other than Windows probably won't work
 - Might have a performance impact because I haven't capped how often it reads the screen
