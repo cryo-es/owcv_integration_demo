@@ -1,5 +1,7 @@
 # owcv_integration_demo
-Controls your vibrator/vibrating toy based on what's happening in Overwatch 2, using computer vision. Requires [Intiface Central](https://intiface.com/central/)  if you want to use it with a toy.
+Controls your vibrator/vibrating toy based on what's happening in Overwatch 2, using computer vision.
+
+Requires [Intiface Central](https://intiface.com/central/)  if you want to use it with a toy.
 
 Default settings:
 - **Elimination:** +30% intensity for 6 seconds
