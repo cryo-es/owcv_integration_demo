@@ -2,6 +2,7 @@ import ow_cv_class as owcv
 import cv2 as cv
 import time
 
+
 class Player:
 	def __init__(self, isMercy=False):
 		self.ow = owcv.ComputerVision()
@@ -93,9 +94,4 @@ class Player:
 		print(f"Average time: {round(1000 * (seconds/counter), 4)}ms")
 
 #player = Player(isMercy=True)
-#time.sleep(3)
-#player.refresh()
-#player.benchmark(1)
-#player.benchmark(10)
-#player.benchmark(100)
 #player.per_sec(10)
