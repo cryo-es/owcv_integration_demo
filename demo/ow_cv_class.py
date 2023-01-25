@@ -17,15 +17,18 @@ def resource_path(relative_path):
 class ComputerVision:
 	def __init__(self, final_resolution={"height":1080,"width":1920}):
 		self.resolution = {"height":1080, "width":1920}
+		#Both start and end x coords for saved need to be tested
 		self.coords = {
-			"elimination":[745, 853, 672, 960],
-			"assist":[745, 853, 672, 960],
-			"saved":[745, 853, 672, 960],
+			"elimination":[749, 850, 831, 976],
+			"assist":[749, 850, 831, 976],
+			"saved":[749, 850, 690, 976],
 			"killcam":[89, 107, 41, 69],
 			"death_spec":[66, 86, 1416, 1574],
-			"heal_beam":[650, 730, 785, 860],
-			"damage_beam":[650, 730, 1060, 1130],
+			"heal_beam":[658, 719, 793, 854],
+			"damage_beam":[658, 719, 1065, 1126],
 			"resurrect_cd":[920, 1000, 1580, 1655]}
+		#self.screenshot_region = self.get_screenshot_region()
+		self.screenshot_region = {"top":0, "left":0, "height":self.resolution["height"], "width":self.resolution["width"]}
 		self.scale_to_res(final_resolution)
 		self.templates = {}
 		for i in self.coords:
@@ -36,6 +39,19 @@ class ComputerVision:
 			self.masks[i] = cv.imread(resource_path(f"m_{i}.png"))
 		self.screen = mss()
 		self.frame = []
+
+	def get_screenshot_region(self):
+		extremes = [99999, 0, 99999, 0]
+		for i in self.coords.values():
+			if i[0] < extremes[0]:
+				extremes[0] = i[0]
+			if i[1] > extremes[1]:
+				extremes[1] = i[1]
+			if i[2] < extremes[2]:
+				extremes[2] = i[2]
+			if i[3] > extremes[3]:
+				extremes[3] = i[3]
+		return {"top":extremes[0], "left":extremes[2], "height":extremes[1]-extremes[0], "width":extremes[3]-extremes[2]}
 
 	def scale_to_res(self, final_resolution):
 		multiplier = {
@@ -54,7 +70,7 @@ class ComputerVision:
 
 	def capture_frame(self):
 		#Probably can apply the colour transformation after matchTemplate
-		self.frame = cv.cvtColor(np.array(self.screen.grab({"top":0, "left":0, "width":self.resolution["width"], "height":self.resolution["height"]})), cv.COLOR_RGB2BGR)
+		self.frame = cv.cvtColor(np.array(self.screen.grab(self.screenshot_region)), cv.COLOR_RGB2BGR)
 
 	def crop(self, image, template_name):
 		return image[self.coords[template_name][0]:self.coords[template_name][1], self.coords[template_name][2]:self.coords[template_name][3]]
