@@ -1,7 +1,5 @@
 import buttplug.client as bp
-import numpy as np
 import asyncio
-import cv2
 import time
 import winsound
 import PySimpleGUI as sg
@@ -27,15 +25,6 @@ def device_added(emitter, dev: bp.ButtplugClientDevice):
 def device_removed(emitter, dev: bp.ButtplugClientDevice):
     print("Device removed: ", dev)
 
-async def stop_all_devices():
-    for device in devices:
-            await device.send_stop_device_cmd()
-    print("Stopped all devices.")
-
-async def prevent_disconnection(time):
-    if time >= (last_command_time + KEEP_ALIVE):
-        await alter_intensity(0)
-
 def limit_intensity(intensity):
     if intensity > 1:
         print(f"Intensity was {intensity} but it cannot be higher than 1. Setting it to 1.")
@@ -44,6 +33,15 @@ def limit_intensity(intensity):
         print(f"Intensity was {intensity} but it cannot be lower than 0. Setting it to 0.")
         intensity = 0
     return intensity
+
+async def stop_all_devices():
+    for device in devices:
+            await device.send_stop_device_cmd()
+    print("Stopped all devices.")
+
+async def prevent_disconnection(time):
+    if time >= (last_command_time + KEEP_ALIVE):
+        await alter_intensity(0)
 
 async def alter_intensity(amount):
     global current_intensity
@@ -75,7 +73,6 @@ async def update_intensity():
             await alter_intensity(-pair[1])
 
 async def main():
-
     #Read constants from config.ini
     USING_INTIFACE = config["demo"].getboolean("USING_INTIFACE")
     SAVED_VIBE_INTENSITY = float(config["demo"]["SAVED_VIBE_INTENSITY"])
@@ -94,7 +91,8 @@ async def main():
     PLAYING_MERCY = config["demo"].getboolean("PLAYING_MERCY")
     VIBE_FOR_RESURRECT = config["demo"].getboolean("VIBE_FOR_RESURRECT")
     VIBE_FOR_MERCY_BEAM = config["demo"].getboolean("VIBE_FOR_MERCY_BEAM")
-    REFRESH_DELAY = float(config["demo"]["REFRESH_DELAY"])
+    DEAD_REFRESH_DELAY = float(config["demo"]["DEAD_REFRESH_DELAY"])
+    MAX_REFRESH_RATE = float(config["demo"]["MAX_REFRESH_RATE"])
 
     #Set up GUI
     sg.theme("DarkAmber")
@@ -146,75 +144,77 @@ async def main():
                 #counter = 0
                 #start_time = time.time()
                 #while time.time() < start_time + seconds:
-                #    counter += 1
                 while True:
                     await update_intensity()
                     current_time = time.time()
                     await prevent_disconnection(current_time)
 
-                    if player.in_killcam or player.death_spectating:
-                        if current_time >= last_refresh + REFRESH_DELAY:
-                            player.refresh() #Once player spawns, two refreshes occur in quick succession :(
+                    if current_time >= last_refresh + (1 / MAX_REFRESH_RATE):
+                        #counter += 1
+                        if player.in_killcam or player.death_spectating:
+                            if current_time >= last_refresh + DEAD_REFRESH_DELAY:
+                                last_refresh = current_time
+                                player.refresh() #Once player spawns, two refreshes occur in quick succession :(
+                        else:
                             last_refresh = current_time
-                    else:
-                        player.refresh()
-                        last_refresh = current_time
-                        if VIBE_FOR_ELIM:
-                            if player.elim_notifs > current_elim_count:
-                                #New elim appeared
-                                difference = player.elim_notifs - current_elim_count
-                                current_elim_count = player.elim_notifs
-                                await alter_intensity_for_duration(difference*ELIM_VIBE_INTENSITY, ELIM_VIBE_DURATION)
+                            player.refresh()
 
-                            elif player.elim_notifs < current_elim_count:
-                                #Old elim disappeared
-                                current_elim_count = player.elim_notifs
+                            if VIBE_FOR_ELIM:
+                                if player.elim_notifs > current_elim_count:
+                                    #New elim appeared
+                                    difference = player.elim_notifs - current_elim_count
+                                    current_elim_count = player.elim_notifs
+                                    await alter_intensity_for_duration(difference*ELIM_VIBE_INTENSITY, ELIM_VIBE_DURATION)
 
-                        if VIBE_FOR_ASSIST:
-                            if player.assist_notifs > current_assist_count:
-                                #New assist appeared
-                                difference = player.assist_notifs - current_assist_count
-                                current_assist_count = player.assist_notifs
-                                await alter_intensity_for_duration(difference*ASSIST_VIBE_INTENSITY, ASSIST_VIBE_DURATION)
+                                elif player.elim_notifs < current_elim_count:
+                                    #Old elim disappeared
+                                    current_elim_count = player.elim_notifs
 
-                            elif player.assist_notifs < current_assist_count:
-                                #Old assist disappeared
-                                current_assist_count = player.assist_notifs
-                        
-                        if VIBE_FOR_SAVE:
-                            if player.saved_notifs > 0 and "saved" not in intensity_tracker:
-                                await alter_intensity_for_duration(SAVED_VIBE_INTENSITY, SAVED_VIBE_DURATION, key="saved")
+                            if VIBE_FOR_ASSIST:
+                                if player.assist_notifs > current_assist_count:
+                                    #New assist appeared
+                                    difference = player.assist_notifs - current_assist_count
+                                    current_assist_count = player.assist_notifs
+                                    await alter_intensity_for_duration(difference*ASSIST_VIBE_INTENSITY, ASSIST_VIBE_DURATION)
 
-                        if PLAYING_MERCY:
-                            if VIBE_FOR_RESURRECT:
-                                if player.resurrecting and "resurrect" not in intensity_tracker:
-                                    await alter_intensity_for_duration(RESURRECT_VIBE_INTENSITY, RESURRECT_VIBE_DURATION, key="resurrect")
+                                elif player.assist_notifs < current_assist_count:
+                                    #Old assist disappeared
+                                    current_assist_count = player.assist_notifs
                             
-                            if VIBE_FOR_MERCY_BEAM:
-                                if player.heal_beam:
-                                    if not heal_beam_vibe_active:
-                                        if damage_beam_vibe_active:
-                                            await alter_intensity(HEAL_BEAM_VIBE_INTENSITY-DAMAGE_BEAM_VIBE_INTENSITY)
-                                            heal_beam_vibe_active = True
-                                            damage_beam_vibe_active = False
-                                        else:
-                                            await alter_intensity(HEAL_BEAM_VIBE_INTENSITY)
-                                            heal_beam_vibe_active = REFRESH_DELAY
-                                elif player.damage_beam:
-                                    if not damage_beam_vibe_active:
-                                        if heal_beam_vibe_active:
-                                            await alter_intensity(DAMAGE_BEAM_VIBE_INTENSITY-HEAL_BEAM_VIBE_INTENSITY)
-                                            damage_beam_vibe_active = True
+                            if VIBE_FOR_SAVE:
+                                if player.saved_notifs > 0 and "saved" not in intensity_tracker:
+                                    await alter_intensity_for_duration(SAVED_VIBE_INTENSITY, SAVED_VIBE_DURATION, key="saved")
+
+                            if PLAYING_MERCY:
+                                if VIBE_FOR_RESURRECT:
+                                    if player.resurrecting and "resurrect" not in intensity_tracker:
+                                        await alter_intensity_for_duration(RESURRECT_VIBE_INTENSITY, RESURRECT_VIBE_DURATION, key="resurrect")
+                                
+                                if VIBE_FOR_MERCY_BEAM:
+                                    if player.heal_beam:
+                                        if not heal_beam_vibe_active:
+                                            if damage_beam_vibe_active:
+                                                await alter_intensity(HEAL_BEAM_VIBE_INTENSITY-DAMAGE_BEAM_VIBE_INTENSITY)
+                                                heal_beam_vibe_active = True
+                                                damage_beam_vibe_active = False
+                                            else:
+                                                await alter_intensity(HEAL_BEAM_VIBE_INTENSITY)
+                                                heal_beam_vibe_active = True
+                                    elif player.damage_beam:
+                                        if not damage_beam_vibe_active:
+                                            if heal_beam_vibe_active:
+                                                await alter_intensity(DAMAGE_BEAM_VIBE_INTENSITY-HEAL_BEAM_VIBE_INTENSITY)
+                                                damage_beam_vibe_active = True
+                                                heal_beam_vibe_active = False
+                                            else:
+                                                await alter_intensity(DAMAGE_BEAM_VIBE_INTENSITY)
+                                                damage_beam_vibe_active = True
+                                    elif heal_beam_vibe_active:
+                                            await alter_intensity(-HEAL_BEAM_VIBE_INTENSITY)
                                             heal_beam_vibe_active = False
-                                        else:
-                                            await alter_intensity(DAMAGE_BEAM_VIBE_INTENSITY)
-                                            damage_beam_vibe_active = True
-                                elif heal_beam_vibe_active:
-                                        await alter_intensity(-HEAL_BEAM_VIBE_INTENSITY)
-                                        heal_beam_vibe_active = False
-                                elif damage_beam_vibe_active:
-                                    await alter_intensity(-DAMAGE_BEAM_VIBE_INTENSITY)
-                                    damage_beam_vibe_active = False
+                                    elif damage_beam_vibe_active:
+                                        await alter_intensity(-DAMAGE_BEAM_VIBE_INTENSITY)
+                                        damage_beam_vibe_active = False
 
                     event, values = window.read(timeout=1)
                     if event == sg.WIN_CLOSED or event == "Quit":
@@ -222,9 +222,10 @@ async def main():
                         break
                     if event == "Stop":
                         window["-OUTPUT-"].update("STOPPED")
+                        await stop_all_devices()
                         print("Stopped.")
                         break
-                #print(f"Per second: {counter/seconds}")
+                #print(f"Per second: {counter/(time.time()-start_time)}")
 
     except Exception as ex:
         await stop_all_devices()
