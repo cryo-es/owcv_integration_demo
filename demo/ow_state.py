@@ -22,16 +22,18 @@ class Player:
 	def refresh(self):
 		self.ow.capture_frame()
 		self.in_killcam = self.ow.detect_single("killcam")
+		#self.in_killcam = True
 		if not self.in_killcam:
 			self.death_spectating = self.ow.detect_single("death_spec")
+			#self.death_spectating = True
 			if not self.death_spectating:
 				self.elim_notifs = self.ow.detect_multiple("elimination")
 				self.assist_notifs = self.ow.detect_multiple("assist")
 				self.saved_notifs = self.ow.detect_multiple("saved")
-				if self.saved_notifs:
-					self.resurrecting = self.ow.detect_single("resurrect_cd")
 				if self.isMercy:
 					self.detect_mercy_beams()
+					if self.saved_notifs > 0:
+						self.resurrecting = self.ow.detect_single("resurrect_cd")
 
 	def detect_mercy_beams(self):
 		if self.ow.detect_single("heal_beam"):
@@ -81,13 +83,14 @@ class Player:
 		duration = time.time() - start_time
 		print(f"{duration} ({rounds}x)")
 
-	def fps(self, seconds=2):
+	def per_sec(self, seconds=2):
 		counter = 0
 		start_time = time.time()
 		while time.time() < start_time + seconds:
 			self.refresh()
 			counter += 1
-		print(f"FPS: {counter/seconds}")
+		print(f"Per second: {counter/seconds}")
+		print(f"Average time: {round(1000 * (seconds/counter), 4)}ms")
 
 #player = Player(isMercy=True)
 #time.sleep(3)
@@ -95,4 +98,4 @@ class Player:
 #player.benchmark(1)
 #player.benchmark(10)
 #player.benchmark(100)
-#player.fps(2)
+#player.per_sec(10)
