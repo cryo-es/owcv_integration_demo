@@ -14,7 +14,9 @@ This is very much just a prototype/demo, I threw the vibrator part of this toget
 It's mainly to give people in Furi's server something to play with, and also I guess to demonstrate an example of integrating with my OW2 CV project.
 
 Known Issues:
+- Fails to launch if Intiface's server is not running
 - Crashes shortly after launch if you don't have a device connected to Intiface (probably)
 - Resolutions other than 1920x1080 probably don't work (templates/masks need to be scaled)
 - Detecting resurrect in Kiriko ult probably won't work
-- Might have a performance impact because I haven't capped how often it reads the screen
+- Might have a performance impact
+- High latency to the game server causes Mercy's beam to reconnect to targets slower. This can cause temporary gaps in vibration.
