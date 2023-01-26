@@ -13,60 +13,62 @@ def resource_path(relative_path):
 
 
 class ComputerVision:
-	def __init__(self, final_resolution={"height":1080,"width":1920}):
-		self.resolution = {"height":1080, "width":1920}
+	def __init__(self, final_resolution={"width":1920, "height":1080}):
+		self.base_resolution = {"width":1920, "height":1080}
+		self.final_resolution = final_resolution
 		self.coords = {
-			"elimination":[749, 850, 831, 976],
-			"assist":[749, 850, 831, 976],
+			"elimination":[749, 850, 832, 976],
+			"assist":[749, 850, 832, 976],
 			"saved":[749, 850, 727, 922],
 			"killcam":[89, 107, 41, 69],
 			"death_spec":[66, 86, 1416, 1574],
 			"heal_beam":[658, 719, 793, 854],
 			"damage_beam":[658, 719, 1065, 1126],
-			"resurrect_cd":[920, 1000, 1580, 1655]}
-		extremes = self.get_extremes()
-		self.screenshot_region = {"top":extremes[0], "left":extremes[2], "height":extremes[1]-extremes[0], "width":extremes[3]-extremes[2]}
-		self.scale_to_res(final_resolution, extremes)
+			"resurrect_cd":[920, 1000, 1580, 1655],
+			"being_beamed":[762, 807, 460, 508]}
+		#extremes = self.get_extremes()
+		#self.screenshot_region = {"top":extremes[0], "left":extremes[2], "height":extremes[1]-extremes[0], "width":extremes[3]-extremes[2]}
+		self.screenshot_region = {"top":0, "left":0, "height":final_resolution["height"], "width":final_resolution["width"]}
+		#self.scale_to_res(self.final_resolution, extremes)
 		self.templates = {}
 		for i in self.coords:
-			#self.templates[i] = cv.cvtColor(cv.imread(resource_path(f"t_{i}.png")), cv.COLOR_RGB2BGR)
 			self.templates[i] = cv.cvtColor(cv.imread(resource_path(f"t_{i}.png")), cv.COLOR_RGB2GRAY)
 		self.mask_names = ["heal_beam", "damage_beam"]
 		self.masks = {}
 		for i in self.mask_names:
-			#Wasn't doing RGB-BGR conversion on masks before, still seemed to work
-			#self.masks[i] = cv.cvtColor(cv.imread(resource_path(f"m_{i}.png")), cv.COLOR_RGB2BGR)
 			self.masks[i] = cv.cvtColor(cv.imread(resource_path(f"m_{i}.png")), cv.COLOR_RGB2GRAY)
 		self.screen = mss()
 		self.frame = []
 
-	def get_extremes(self):
-		extremes = [99999, 0, 99999, 0]
-		for i in self.coords.values():
-			if i[0] < extremes[0]:
-				extremes[0] = i[0]
-			if i[1] > extremes[1]:
-				extremes[1] = i[1]
-			if i[2] < extremes[2]:
-				extremes[2] = i[2]
-			if i[3] > extremes[3]:
-				extremes[3] = i[3]
-		return extremes
+	#def get_extremes(self):
+	#	extremes = [99999, 0, 99999, 0]
+	#	for i in self.coords.values():
+	#		if i[0] < extremes[0]:
+	#			extremes[0] = i[0]
+	#		if i[1] > extremes[1]:
+	#			extremes[1] = i[1]
+	#		if i[2] < extremes[2]:
+	#			extremes[2] = i[2]
+	#		if i[3] > extremes[3]:
+	#			extremes[3] = i[3]
+	#	return extremes
 
-	def scale_to_res(self, final_resolution, extremes):
-		multiplier = {
-		"height" : final_resolution["height"] / self.resolution["height"],
-		"width" : final_resolution["width"] / self.resolution["width"]}
-		for i in self.coords:
-			self.coords[i][0] = int(self.coords[i][0]-extremes[0] * multiplier["height"])
-			self.coords[i][1] = int(self.coords[i][1]-extremes[0] * multiplier["height"])
-			self.coords[i][2] = int(self.coords[i][2]-extremes[2] * multiplier["width"])
-			self.coords[i][3] = int(self.coords[i][3]-extremes[2] * multiplier["width"])
-		self.resolution = final_resolution
+	#def scale_to_res(self, final_resolution, extremes):
+	#	multiplier = {
+	#	"height" : final_resolution["height"] / self.resolution["height"],
+	#	"width" : final_resolution["width"] / self.resolution["width"]}
+	#	for i in self.coords:
+	#		self.coords[i][0] = int(self.coords[i][0]-extremes[0] * multiplier["height"])
+	#		self.coords[i][1] = int(self.coords[i][1]-extremes[0] * multiplier["height"])
+	#		self.coords[i][2] = int(self.coords[i][2]-extremes[2] * multiplier["width"])
+	#		self.coords[i][3] = int(self.coords[i][3]-extremes[2] * multiplier["width"])
+	#	self.resolution = final_resolution
 
 	def capture_frame(self):
-		#self.frame = cv.cvtColor(np.array(self.screen.grab(self.screenshot_region)), cv.COLOR_RGB2BGR)
-		self.frame = cv.cvtColor(np.array(self.screen.grab(self.screenshot_region)), cv.COLOR_RGB2GRAY)
+		if self.final_resolution != self.base_resolution:
+			self.frame = cv.cvtColor(cv.resize(np.array(self.screen.grab(self.screenshot_region)), (self.base_resolution["width"], self.base_resolution["height"])), cv.COLOR_RGB2GRAY)
+		else:
+			self.frame = cv.cvtColor(np.array(self.screen.grab(self.screenshot_region)), cv.COLOR_RGB2GRAY)
 
 	def crop(self, image, template_name):
 		return image[self.coords[template_name][0]:self.coords[template_name][1], self.coords[template_name][2]:self.coords[template_name][3]]
