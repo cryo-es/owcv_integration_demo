@@ -1,6 +1,8 @@
 # owcv_integration_demo
 Controls your vibrator/vibrating toy based on what's happening in Overwatch 2, using computer vision.
 
+This started out as a prototype/demo that I threw together in an afternoon, but I've been sucked into it so it's becoming a fully-fledged project now. Open to name ideas!
+
 Requires [Intiface Central](https://intiface.com/central/)  if you want to use it with a toy.
 
 Default settings:
@@ -9,8 +11,6 @@ Default settings:
 - **Resurrect:** +100% intensity for 4 seconds
 - **Heal beam:** +10% intensity while active
 - **Damage boost beam:** +20% intensity while active
-
-This started out as a prototype/demo that I threw together in an afternoon. Looks like it's becoming a fully-fledged project now. Open to name ideas!
 
 Known Issues:
 - Fails to launch if Intiface's server is not running
