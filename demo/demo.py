@@ -36,8 +36,13 @@ def limit_intensity(intensity):
 
 async def stop_all_devices():
     for device in devices:
+        try:
             await device.send_stop_device_cmd()
-    print("Stopped all devices.")
+            print("Stopped all devices.")
+        except ButtplugDeviceError as err:
+            #Add code to retry the command later
+            print("A device experienced an error while being stopped. Is it disconnected?")
+            print(err)
 
 async def prevent_disconnection(time):
     if time >= (last_command_time + KEEP_ALIVE):
@@ -51,7 +56,12 @@ async def alter_intensity(amount):
     real_intensity = limit_intensity(current_intensity)
     print(f"Real intensity:    {real_intensity}")
     for device in devices:
-        await device.send_vibrate_cmd(real_intensity)
+        try:
+            await device.send_vibrate_cmd(real_intensity)
+        except ButtplugDeviceError as err:
+            #Add code to retry the command later
+            print("A device experienced an error while having its vibration altered. Is it disconnected?")
+            print(err)
     last_command_time = time.time()
     if BEEP_ENABLED:
         winsound.Beep(int(1000 + (real_intensity*5000)), 20)
@@ -74,25 +84,31 @@ async def update_intensity():
 
 async def main():
     #Read constants from config.ini
+    SCREEN_WIDTH = int(config["demo"]["SCREEN_WIDTH"])
+    SCREEN_HEIGHT = int(config["demo"]["SCREEN_HEIGHT"])
     USING_INTIFACE = config["demo"].getboolean("USING_INTIFACE")
+    VIBE_FOR_ELIM = config["demo"].getboolean("VIBE_FOR_ELIM")
+    VIBE_FOR_ASSIST = config["demo"].getboolean("VIBE_FOR_ASSIST")
+    VIBE_FOR_SAVE = config["demo"].getboolean("VIBE_FOR_SAVE")
+    VIBE_FOR_BEING_BEAMED = config["demo"].getboolean("VIBE_FOR_BEING_BEAMED")
+    PLAYING_MERCY = config["demo"].getboolean("PLAYING_MERCY")
+    VIBE_FOR_RESURRECT = config["demo"].getboolean("VIBE_FOR_RESURRECT")
+    VIBE_FOR_MERCY_BEAM = config["demo"].getboolean("VIBE_FOR_MERCY_BEAM")
     SAVED_VIBE_INTENSITY = float(config["demo"]["SAVED_VIBE_INTENSITY"])
     ELIM_VIBE_INTENSITY = float(config["demo"]["ELIM_VIBE_INTENSITY"])
     ASSIST_VIBE_INTENSITY = float(config["demo"]["ASSIST_VIBE_INTENSITY"])
     RESURRECT_VIBE_INTENSITY = float(config["demo"]["RESURRECT_VIBE_INTENSITY"])
     HEAL_BEAM_VIBE_INTENSITY = float(config["demo"]["HEAL_BEAM_VIBE_INTENSITY"])
     DAMAGE_BEAM_VIBE_INTENSITY = float(config["demo"]["DAMAGE_BEAM_VIBE_INTENSITY"])
+    BEING_BEAMED_VIBE_INTENSITY =float(config["demo"]["BEING_BEAMED_VIBE_INTENSITY"])
     RESURRECT_VIBE_DURATION = float(config["demo"]["RESURRECT_VIBE_DURATION"])
     SAVED_VIBE_DURATION = float(config["demo"]["SAVED_VIBE_DURATION"])
     ELIM_VIBE_DURATION = float(config["demo"]["ELIM_VIBE_DURATION"])
     ASSIST_VIBE_DURATION = float(config["demo"]["ASSIST_VIBE_DURATION"])
-    VIBE_FOR_ELIM = config["demo"].getboolean("VIBE_FOR_ELIM")
-    VIBE_FOR_ASSIST = config["demo"].getboolean("VIBE_FOR_ASSIST")
-    VIBE_FOR_SAVE = config["demo"].getboolean("VIBE_FOR_SAVE")
-    PLAYING_MERCY = config["demo"].getboolean("PLAYING_MERCY")
-    VIBE_FOR_RESURRECT = config["demo"].getboolean("VIBE_FOR_RESURRECT")
-    VIBE_FOR_MERCY_BEAM = config["demo"].getboolean("VIBE_FOR_MERCY_BEAM")
     DEAD_REFRESH_DELAY = float(config["demo"]["DEAD_REFRESH_DELAY"])
     MAX_REFRESH_RATE = float(config["demo"]["MAX_REFRESH_RATE"])
+    
+    FINAL_RESOLUTION = {"width":SCREEN_WIDTH, "height":SCREEN_HEIGHT}
 
     #Set up GUI
     sg.theme("DarkAmber")
@@ -104,11 +120,11 @@ async def main():
     #Initialize some variables
     heal_beam_vibe_active = False
     damage_beam_vibe_active = False
-    saved_notif_vibe_active = False
+    being_beamed_vibe_active = False
     current_elim_count = 0
     current_assist_count = 0
     last_refresh = 0
-    player = ow_state.Player(isMercy=PLAYING_MERCY)
+    player = ow_state.Player(FINAL_RESOLUTION, isMercy=PLAYING_MERCY)
 
     if USING_INTIFACE:
         client = bp.ButtplugClient("Integration_Demo")
@@ -125,8 +141,8 @@ async def main():
             return
 
         await client.start_scanning()
-        await asyncio.sleep(1)
-        await client.stop_scanning()
+        #await asyncio.sleep(1)
+        #await client.stop_scanning()
 
     try:
         while True:
@@ -154,7 +170,7 @@ async def main():
                         if player.in_killcam or player.death_spectating:
                             if current_time >= last_refresh + DEAD_REFRESH_DELAY:
                                 last_refresh = current_time
-                                player.refresh() #Once player spawns, two refreshes occur in quick succession :(
+                                player.refresh()
                         else:
                             last_refresh = current_time
                             player.refresh()
@@ -184,6 +200,16 @@ async def main():
                             if VIBE_FOR_SAVE:
                                 if player.saved_notifs > 0 and "saved" not in intensity_tracker:
                                     await alter_intensity_for_duration(SAVED_VIBE_INTENSITY, SAVED_VIBE_DURATION, key="saved")
+
+                            if VIBE_FOR_BEING_BEAMED:
+                                if being_beamed_vibe_active:
+                                    if not player.being_beamed:
+                                        await alter_intensity(-BEING_BEAMED_VIBE_INTENSITY)
+                                        being_beamed_vibe_active = False
+                                else:
+                                    if player.being_beamed:
+                                        await alter_intensity(BEING_BEAMED_VIBE_INTENSITY)
+                                        being_beamed_vibe_active = True
 
                             if PLAYING_MERCY:
                                 if VIBE_FOR_RESURRECT:
@@ -235,6 +261,8 @@ async def main():
 
     await stop_all_devices()
     print("Quitting.")
+
+    await client.stop_scanning()
     
     if USING_INTIFACE:
         await client.disconnect()
