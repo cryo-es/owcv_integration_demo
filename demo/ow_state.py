@@ -1,11 +1,11 @@
-import ow_cv_class as owcv
+import ow_cv_class
 import cv2 as cv
 import time
 
 
 class Player:
 	def __init__(self, final_resolution, isMercy=False):
-		self.ow = owcv.ComputerVision(final_resolution=final_resolution)
+		self.owcv = ow_cv_class.ComputerVision(final_resolution=final_resolution)
 		self.isMercy = isMercy
 		self.in_killcam = False
 		self.death_spectating = False
@@ -19,27 +19,28 @@ class Player:
 		self.heal_beam_active_confs = 0
 		self.damage_beam_active_confs = 0
 		self.pos_required_confs = 1
-		self.neg_required_confs = 4
+		self.neg_required_confs = 8
 
-	def refresh(self):
-		self.ow.capture_frame()
-		self.in_killcam = self.ow.detect_single("killcam")
-		#self.in_killcam = True
+	def refresh(self, frame_capture_only=False):
+		self.owcv.capture_frame()
+		if frame_capture_only:
+			self.in_killcam = True
+		else:
+			self.in_killcam = self.owcv.detect_single("killcam")
 		if not self.in_killcam:
-			self.death_spectating = self.ow.detect_single("death_spec")
-			#self.death_spectating = True
+			self.death_spectating = self.owcv.detect_single("death_spec")
 			if not self.death_spectating:
-				self.elim_notifs = self.ow.detect_multiple("elimination")
-				self.assist_notifs = self.ow.detect_multiple("assist")
-				self.saved_notifs = self.ow.detect_multiple("saved")
-				self.being_beamed = self.ow.detect_single("being_beamed")
+				self.elim_notifs = self.owcv.detect_multiple("elimination")
+				self.assist_notifs = self.owcv.detect_multiple("assist")
+				self.saved_notifs = self.owcv.detect_multiple("saved")
+				self.being_beamed = self.owcv.detect_single("being_beamed")
 				if self.isMercy:
 					self.detect_mercy_beams()
 					if self.saved_notifs > 0:
-						self.resurrecting = self.ow.detect_single("resurrect_cd")
+						self.resurrecting = self.owcv.detect_single("resurrect_cd")
 
 	def detect_mercy_beams(self):
-		if self.ow.detect_single("heal_beam"):
+		if self.owcv.detect_single("heal_beam"):
 			if self.heal_beam_active_confs == self.pos_required_confs:
 				if not self.heal_beam:
 					self.heal_beam = True
@@ -59,7 +60,7 @@ class Player:
 				else:
 					self.heal_beam_active_confs -= 1
 
-		if self.ow.detect_single("damage_beam"):
+		if self.owcv.detect_single("damage_beam"):
 			if self.damage_beam_active_confs == self.pos_required_confs:
 				if not self.damage_beam:
 					self.damage_beam = True
@@ -90,10 +91,10 @@ class Player:
 		counter = 0
 		start_time = time.time()
 		while time.time() < start_time + seconds:
-			self.refresh()
+			self.refresh(frame_capture_only=True)
 			counter += 1
 		print(f"Per second: {counter/seconds}")
 		print(f"Average time: {round(1000 * (seconds/counter), 4)}ms")
 
 #player = Player({"width":1920, "height":1080}, isMercy=True)
-#player.per_sec(60)
+#player.per_sec(10)
