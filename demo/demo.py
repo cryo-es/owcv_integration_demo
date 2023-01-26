@@ -39,7 +39,7 @@ async def stop_all_devices():
         try:
             await device.send_stop_device_cmd()
             print("Stopped all devices.")
-        except ButtplugDeviceError as err:
+        except Exception as err:
             #Add code to retry the command later
             print("A device experienced an error while being stopped. Is it disconnected?")
             print(err)
@@ -58,7 +58,7 @@ async def alter_intensity(amount):
     for device in devices:
         try:
             await device.send_vibrate_cmd(real_intensity)
-        except ButtplugDeviceError as err:
+        except Exception as err:
             #Add code to retry the command later
             print("A device experienced an error while having its vibration altered. Is it disconnected?")
             print(err)
@@ -87,20 +87,20 @@ async def main():
     SCREEN_WIDTH = int(config["demo"]["SCREEN_WIDTH"])
     SCREEN_HEIGHT = int(config["demo"]["SCREEN_HEIGHT"])
     USING_INTIFACE = config["demo"].getboolean("USING_INTIFACE")
+    PLAYING_MERCY = config["demo"].getboolean("PLAYING_MERCY")
     VIBE_FOR_ELIM = config["demo"].getboolean("VIBE_FOR_ELIM")
     VIBE_FOR_ASSIST = config["demo"].getboolean("VIBE_FOR_ASSIST")
     VIBE_FOR_SAVE = config["demo"].getboolean("VIBE_FOR_SAVE")
     VIBE_FOR_BEING_BEAMED = config["demo"].getboolean("VIBE_FOR_BEING_BEAMED")
-    PLAYING_MERCY = config["demo"].getboolean("PLAYING_MERCY")
     VIBE_FOR_RESURRECT = config["demo"].getboolean("VIBE_FOR_RESURRECT")
     VIBE_FOR_MERCY_BEAM = config["demo"].getboolean("VIBE_FOR_MERCY_BEAM")
     SAVED_VIBE_INTENSITY = float(config["demo"]["SAVED_VIBE_INTENSITY"])
     ELIM_VIBE_INTENSITY = float(config["demo"]["ELIM_VIBE_INTENSITY"])
     ASSIST_VIBE_INTENSITY = float(config["demo"]["ASSIST_VIBE_INTENSITY"])
+    BEING_BEAMED_VIBE_INTENSITY =float(config["demo"]["BEING_BEAMED_VIBE_INTENSITY"])
     RESURRECT_VIBE_INTENSITY = float(config["demo"]["RESURRECT_VIBE_INTENSITY"])
     HEAL_BEAM_VIBE_INTENSITY = float(config["demo"]["HEAL_BEAM_VIBE_INTENSITY"])
     DAMAGE_BEAM_VIBE_INTENSITY = float(config["demo"]["DAMAGE_BEAM_VIBE_INTENSITY"])
-    BEING_BEAMED_VIBE_INTENSITY =float(config["demo"]["BEING_BEAMED_VIBE_INTENSITY"])
     RESURRECT_VIBE_DURATION = float(config["demo"]["RESURRECT_VIBE_DURATION"])
     SAVED_VIBE_DURATION = float(config["demo"]["SAVED_VIBE_DURATION"])
     ELIM_VIBE_DURATION = float(config["demo"]["ELIM_VIBE_DURATION"])
@@ -261,10 +261,9 @@ async def main():
 
     await stop_all_devices()
     print("Quitting.")
-
-    await client.stop_scanning()
     
     if USING_INTIFACE:
+        await client.stop_scanning()
         await client.disconnect()
         print("Disconnected.")
 
