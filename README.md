@@ -10,8 +10,7 @@ Default settings:
 - **Heal beam:** +10% intensity while active
 - **Damage boost beam:** +20% intensity while active
 
-This is very much just a prototype/demo, I threw the vibrator part of this together in an afternoon.
-It's mainly to give people in Furi's server something to play with, and also I guess to demonstrate an example of integrating with my OW2 CV project.
+This started out as a prototype/demo that I threw together in an afternoon. Looks like it's becoming a fully-fledged project now. Open to name ideas!
 
 Known Issues:
 - Fails to launch if Intiface's server is not running
