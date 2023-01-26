@@ -4,8 +4,8 @@ import time
 
 
 class Player:
-	def __init__(self, isMercy=False):
-		self.ow = owcv.ComputerVision()
+	def __init__(self, final_resolution, isMercy=False):
+		self.ow = owcv.ComputerVision(final_resolution=final_resolution)
 		self.isMercy = isMercy
 		self.in_killcam = False
 		self.death_spectating = False
@@ -15,6 +15,7 @@ class Player:
 		self.elim_notifs = 0
 		self.assist_notifs = 0
 		self.resurrecting = False
+		self.being_beamed = False
 		self.heal_beam_active_confs = 0
 		self.damage_beam_active_confs = 0
 		self.pos_required_confs = 1
@@ -31,6 +32,7 @@ class Player:
 				self.elim_notifs = self.ow.detect_multiple("elimination")
 				self.assist_notifs = self.ow.detect_multiple("assist")
 				self.saved_notifs = self.ow.detect_multiple("saved")
+				self.being_beamed = self.ow.detect_single("being_beamed")
 				if self.isMercy:
 					self.detect_mercy_beams()
 					if self.saved_notifs > 0:
@@ -93,5 +95,5 @@ class Player:
 		print(f"Per second: {counter/seconds}")
 		print(f"Average time: {round(1000 * (seconds/counter), 4)}ms")
 
-#player = Player(isMercy=True)
-#player.per_sec(10)
+#player = Player({"width":1920, "height":1080}, isMercy=True)
+#player.per_sec(60)
