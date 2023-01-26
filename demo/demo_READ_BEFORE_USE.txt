@@ -6,9 +6,11 @@ Before running the exe for the first time:
 Open config.ini and toggle off any features you don't want.
 
 Settings you might want to change:
-BEEP_ENABLED = False (disables the debug beep each time the vibe intensity changes, some may want this on especially if you're testing without a toy)
+BEEP_ENABLED = False (disables the debug beep each time vibe intensity changes, some may want this on)
 USING_INTIFACE = True (enables the connection to Intiface, leave it as False if you want to test without a toy)
 PLAYING_MERCY = False (if you're not planning to play Mercy, set to False for better performance)
+SCREEN_WIDTH = 2560 (if your monitor is 2560x1440, or set some other value as per your monitor)
+SCREEN_HEIGHT = 1440 (if your monitor is 2560x1440, or set some other value as per your monitor)
 
 Notes:
 This is very much just a prototype/demo, I threw the vibrator part of this together in an afternoon
@@ -21,3 +23,4 @@ Known Issues:
 - Detecting resurrect in Kiriko ult probably won't work
 - Operating systems other than Windows probably won't work
 - Might have a performance impact
+- High latency to the game server causes Mercy's beam to reconnect to people slower when switching types. This can cause temporary gaps in vibration.
