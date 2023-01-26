@@ -19,7 +19,7 @@ class Player:
 		self.heal_beam_active_confs = 0
 		self.damage_beam_active_confs = 0
 		self.pos_required_confs = 1
-		self.neg_required_confs = 8
+		self.neg_required_confs = 4
 
 	def refresh(self):
 		self.ow.capture_frame()
@@ -45,7 +45,7 @@ class Player:
 					self.heal_beam = True
 					self.damage_beam = False
 			else:
-				if self.heal_beam_active_confs < 0:
+				if self.heal_beam_active_confs <= 0:
 					self.heal_beam_active_confs = 1
 				else:
 					self.heal_beam_active_confs += 1
@@ -54,7 +54,7 @@ class Player:
 				if self.heal_beam:
 					self.heal_beam = False
 			else:
-				if self.heal_beam_active_confs > 0:
+				if self.heal_beam_active_confs >= 0:
 					self.heal_beam_active_confs = -1
 				else:
 					self.heal_beam_active_confs -= 1
@@ -65,7 +65,7 @@ class Player:
 					self.damage_beam = True
 					self.heal_beam = False
 			else:
-				if self.damage_beam_active_confs < 0:
+				if self.damage_beam_active_confs <= 0:
 					self.damage_beam_active_confs = 1
 				else:
 					self.damage_beam_active_confs += 1
@@ -74,7 +74,7 @@ class Player:
 				if self.damage_beam:
 					self.damage_beam = False
 			else:
-				if self.damage_beam_active_confs > 0:
+				if self.damage_beam_active_confs >= 0:
 					self.damage_beam_active_confs = -1
 				else:
 					self.damage_beam_active_confs -= 1
