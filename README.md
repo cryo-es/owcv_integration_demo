@@ -1,7 +1,7 @@
 # owcv_integration_demo
-Controls your vibrator/vibrating toy based on what's happening in Overwatch 2, using computer vision.
+[Download](https://github.com/cryo-es/owcv_integration_demo/releases)
 
-[Download link](https://github.com/cryo-es/owcv_integration_demo/releases)
+Controls your vibrator/vibrating toy based on what's happening in Overwatch 2, using computer vision.
 
 This started out as a prototype/demo that I threw together in an afternoon, but I've been sucked into it so it's becoming a fully-fledged project now. Open to name ideas!
 
