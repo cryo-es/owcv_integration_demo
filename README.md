@@ -15,6 +15,7 @@ Default settings:
 - **Damage boost beam:** +20% intensity while active
 
 Known Issues:
+- Only works on Windows
 - Fails to launch if Intiface's server is not running
 - Crashes shortly after launch if you don't have a device connected to Intiface (probably)
 - Detecting resurrect in Kiriko ult probably won't work
