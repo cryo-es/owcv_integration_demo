@@ -16,7 +16,7 @@ Default settings:
 
 Known Issues:
 - Only works on Windows
-- Fails to launch if Intiface's server is not running
+- Fails to launch if Intiface's server isn't running
 - Crashes shortly after launch if you don't have a device connected to Intiface (probably)
 - Detecting resurrect in Kiriko ult probably won't work
 - High latency to the game server causes Mercy's beam to reconnect to targets slower. This can cause temporary gaps in vibration.
