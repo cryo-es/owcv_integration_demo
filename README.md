@@ -16,6 +16,6 @@ Default settings:
 
 Known Issues:
 - Bugginess at resolutions other than 1920x1080. I should have a fix soon.
-- High latency to the game server causes Mercy's beam to reconnect to people slower when switching types. This can cause temporary gaps in vibration.
 - Detecting resurrect in Kiriko ult probably won't work.
+- High latency to the game server causes Mercy's beam to reconnect to people slower when switching types. This can cause temporary gaps in vibration.
 - Only works on Windows.
