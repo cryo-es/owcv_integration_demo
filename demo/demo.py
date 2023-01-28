@@ -12,18 +12,30 @@ import ow_cv_class
 config = configparser.ConfigParser()
 config.read(ow_cv_class.resource_path('config.ini'))
 BEEP_ENABLED = config["demo"].getboolean("BEEP_ENABLED")
-KEEP_ALIVE = float(config["demo"]["KEEP_ALIVE"])
+KEEP_ALIVE = config["demo"].getfloat("KEEP_ALIVE")
 devices = []
 current_intensity = 0
 intensity_tracker = {}
 last_command_time = 0
 
+#Set up GUI
+sg.theme("DarkAmber")
+layout = [
+    [sg.Text("Devices connected:"), sg.Text("0", size=(4,1), key="-DEVICE_COUNT-")],
+    [sg.Text("Current intensity:"), sg.Text("0%", size=(17,1), key="-CURRENT_INTENSITY-")],
+    [sg.Text("Program status:"), sg.Text("READY", size=(15,1), key="-PROGRAM_STATUS-")],
+    [sg.Button("Start"), sg.Button("Stop", disabled=True), sg.Button("Quit")]]
+window = sg.Window("Demo", layout, finalize=True)#, grab_anywhere=True)
+
+
 def device_added(emitter, dev: bp.ButtplugClientDevice):
     devices.append(dev)
     print("Device added: ", dev)
+    window["-DEVICE_COUNT-"].update(str(len(devices)))
 
 def device_removed(emitter, dev: bp.ButtplugClientDevice):
     print("Device removed: ", dev)
+    window["-DEVICE_COUNT-"].update(str(len(devices)))
 
 def limit_intensity(intensity):
     if intensity > 1:
@@ -38,11 +50,12 @@ async def stop_all_devices():
     for device in devices:
         try:
             await device.send_stop_device_cmd()
-            print("Stopped all devices.")
         except Exception as err:
-            #Add code to retry the command later
             print("A device experienced an error while being stopped. Is it disconnected?")
             print(err)
+            devices.remove(device)
+    window["-DEVICE_COUNT-"].update(len(devices))
+    print("Stopped all devices.")
 
 async def prevent_disconnection(time):
     if time >= (last_command_time + KEEP_ALIVE):
@@ -58,9 +71,12 @@ async def alter_intensity(amount):
     for device in devices:
         try:
             await device.send_vibrate_cmd(real_intensity)
+            window["-CURRENT_INTENSITY-"].update(str(int(current_intensity*100)) + ("%" if current_intensity == real_intensity else "% (max 100%)"))
         except Exception as err:
-            #Add code to retry the command later
-            print("A device experienced an error while having its vibration altered. Is it disconnected?")
+            device.send_stop_device_cmd()
+            devices.remove(device)
+            window["-DEVICE_COUNT-"].update(len(devices))
+            print("A device experienced an error while having its vibration altered. Did it disconnect?")
             print(err)
     last_command_time = time.time()
     if BEEP_ENABLED:
@@ -84,52 +100,55 @@ async def update_intensity():
 
 async def main():
     #Read constants from config.ini
-    SCREEN_WIDTH = int(config["demo"]["SCREEN_WIDTH"])
-    SCREEN_HEIGHT = int(config["demo"]["SCREEN_HEIGHT"])
+    SCREEN_WIDTH = config["demo"].getint("SCREEN_WIDTH")
+    SCREEN_HEIGHT = config["demo"].getint("SCREEN_HEIGHT")
+
     USING_INTIFACE = config["demo"].getboolean("USING_INTIFACE")
     PLAYING_MERCY = config["demo"].getboolean("PLAYING_MERCY")
-    VIBE_FOR_ELIM = config["demo"].getboolean("VIBE_FOR_ELIM")
-    VIBE_FOR_ASSIST = config["demo"].getboolean("VIBE_FOR_ASSIST")
-    VIBE_FOR_SAVE = config["demo"].getboolean("VIBE_FOR_SAVE")
-    VIBE_FOR_BEING_BEAMED = config["demo"].getboolean("VIBE_FOR_BEING_BEAMED")
-    VIBE_FOR_RESURRECT = config["demo"].getboolean("VIBE_FOR_RESURRECT")
-    VIBE_FOR_MERCY_BEAM = config["demo"].getboolean("VIBE_FOR_MERCY_BEAM")
-    SAVED_VIBE_INTENSITY = float(config["demo"]["SAVED_VIBE_INTENSITY"])
-    ELIM_VIBE_INTENSITY = float(config["demo"]["ELIM_VIBE_INTENSITY"])
-    ASSIST_VIBE_INTENSITY = float(config["demo"]["ASSIST_VIBE_INTENSITY"])
-    BEING_BEAMED_VIBE_INTENSITY =float(config["demo"]["BEING_BEAMED_VIBE_INTENSITY"])
-    RESURRECT_VIBE_INTENSITY = float(config["demo"]["RESURRECT_VIBE_INTENSITY"])
-    HEAL_BEAM_VIBE_INTENSITY = float(config["demo"]["HEAL_BEAM_VIBE_INTENSITY"])
-    DAMAGE_BEAM_VIBE_INTENSITY = float(config["demo"]["DAMAGE_BEAM_VIBE_INTENSITY"])
-    RESURRECT_VIBE_DURATION = float(config["demo"]["RESURRECT_VIBE_DURATION"])
-    SAVED_VIBE_DURATION = float(config["demo"]["SAVED_VIBE_DURATION"])
-    ELIM_VIBE_DURATION = float(config["demo"]["ELIM_VIBE_DURATION"])
-    ASSIST_VIBE_DURATION = float(config["demo"]["ASSIST_VIBE_DURATION"])
-    DEAD_REFRESH_DELAY = float(config["demo"]["DEAD_REFRESH_DELAY"])
-    MAX_REFRESH_RATE = int(config["demo"]["MAX_REFRESH_RATE"])
-    
-    FINAL_RESOLUTION = {"width":SCREEN_WIDTH, "height":SCREEN_HEIGHT}
 
-    #Set up GUI
-    sg.theme("DarkAmber")
-    layout = [
-        [sg.Text("Status:"), sg.Text("STOPPED", size=(8,1), key="-OUTPUT-")],
-        [sg.Button("Start"), sg.Button("Stop"), sg.Button("Quit")]]
-    window = sg.Window("Demo", layout)
+    VIBE_FOR_ELIM = config["demo"].getboolean("VIBE_FOR_ELIM")
+    ELIM_VIBE_INTENSITY = config["demo"].getfloat("ELIM_VIBE_INTENSITY")
+    ELIM_VIBE_DURATION = config["demo"].getfloat("ELIM_VIBE_DURATION")
+
+    VIBE_FOR_ASSIST = config["demo"].getboolean("VIBE_FOR_ASSIST")
+    ASSIST_VIBE_INTENSITY = config["demo"].getfloat("ASSIST_VIBE_INTENSITY")
+    ASSIST_VIBE_DURATION = config["demo"].getfloat("ASSIST_VIBE_DURATION")
+
+    VIBE_FOR_SAVE = config["demo"].getboolean("VIBE_FOR_SAVE")
+    SAVED_VIBE_INTENSITY = config["demo"].getfloat("SAVED_VIBE_INTENSITY")
+    SAVED_VIBE_DURATION = config["demo"].getfloat("SAVED_VIBE_DURATION")
+
+    VIBE_FOR_BEING_BEAMED = config["demo"].getboolean("VIBE_FOR_BEING_BEAMED")
+    BEING_BEAMED_VIBE_INTENSITY =config["demo"].getfloat("BEING_BEAMED_VIBE_INTENSITY")
+
+    VIBE_FOR_RESURRECT = config["demo"].getboolean("VIBE_FOR_RESURRECT")
+    RESURRECT_VIBE_INTENSITY = config["demo"].getfloat("RESURRECT_VIBE_INTENSITY")
+    RESURRECT_VIBE_DURATION = config["demo"].getfloat("RESURRECT_VIBE_DURATION")
+
+    VIBE_FOR_MERCY_BEAM = config["demo"].getboolean("VIBE_FOR_MERCY_BEAM")
+    HEAL_BEAM_VIBE_INTENSITY = config["demo"].getfloat("HEAL_BEAM_VIBE_INTENSITY")
+    DAMAGE_BEAM_VIBE_INTENSITY = config["demo"].getfloat("DAMAGE_BEAM_VIBE_INTENSITY")
+
+    DEAD_REFRESH_DELAY = config["demo"].getfloat("DEAD_REFRESH_DELAY")
+    WEBSOCKET_ADDRESS = config["demo"]["WEBSOCKET_ADDRESS"]
+    WEBSOCKET_PORT = config["demo"]["WEBSOCKET_PORT"]
+    MAX_REFRESH_RATE = config["demo"].getint("MAX_REFRESH_RATE")
+
 
     #Initialize some variables
+    scanning = False
     heal_beam_vibe_active = False
     damage_beam_vibe_active = False
     being_beamed_vibe_active = False
     current_elim_count = 0
     current_assist_count = 0
     last_refresh = 0
-    player = ow_state.Player(FINAL_RESOLUTION, isMercy=PLAYING_MERCY)
+    player = ow_state.Player({"width":SCREEN_WIDTH, "height":SCREEN_HEIGHT}, isMercy=PLAYING_MERCY)
 
     if USING_INTIFACE:
         client = bp.ButtplugClient("Integration_Demo")
 
-        connector = bp.websocket_connector.ButtplugClientWebsocketConnector("ws://127.0.0.1:12345")
+        connector = bp.websocket_connector.ButtplugClientWebsocketConnector(f"{WEBSOCKET_ADDRESS}:{WEBSOCKET_PORT}")
 
         client.device_added_handler += device_added
         client.device_removed_handler += device_removed
@@ -137,25 +156,31 @@ async def main():
         try:
             await client.connect(connector)
         except Exception as ex:
-            print(f"Could not connect to server, exiting: {ex}")
-            return
+            print(f"Could not connect to server: {ex}")
+            window["-PROGRAM_STATUS-"].update("INTIFACE ERROR")
+            window["Start"].update(disabled=True)
 
-        await client.start_scanning()
+        try:
+            await client.start_scanning()
+            scanning = True
+        except Exception as ex:
+            print(f"Could not initiate scanning: {ex}")
+            window["Start"].update(disabled=True)
 
     try:
         while True:
-            await prevent_disconnection(time.time())
-            event, values = window.read(100)
+            event, values = window.read(timeout=100)
             if event == sg.WIN_CLOSED or event == "Quit":
                 print("Window closed.")
-                window.close()
                 break
+
             elif event == "Start":
-                window["-OUTPUT-"].update("RUNNING")
+                window["Stop"].update(disabled=False)
+                window["Start"].update(disabled=True)
+                window["-PROGRAM_STATUS-"].update("RUNNING")
                 print("Running...")
 
-                #Shouldn't need to be calling owcv functions from outside ow_state, should find a better way
-                player.owcv.start_capturing(capture_fps=MAX_REFRESH_RATE)
+                player.start_tracking(MAX_REFRESH_RATE)
                 
                 counter = 0
                 start_time = time.time()
@@ -246,13 +271,14 @@ async def main():
                         window.close()
                         break
                     if event == "Stop":
-                        window["-OUTPUT-"].update("STOPPED")
                         await stop_all_devices()
+                        window["-PROGRAM_STATUS-"].update("STOPPED")
+                        window["Stop"].update(disabled=True)
+                        window["Start"].update(disabled=False)
                         print("Stopped.")
                         break
 
-                #Shouldn't need to be calling owcv functions from outside ow_state, should find a better way
-                player.owcv.stop_capturing()
+                player.stop_tracking()
 
                 duration = time.time() - start_time
                 print(f"Loops per second: {counter/(duration)}")
@@ -260,16 +286,20 @@ async def main():
 
     except Exception as ex:
         await stop_all_devices()
-        print(ex)
         if BEEP_ENABLED:
             winsound.Beep(1000, 500)
+        window["-PROGRAM_STATUS-"].update("UNKNOWN ERROR")
+        print(f"Error caught: {ex}")
 
     await stop_all_devices()
-    print("Quitting.")
     
     if USING_INTIFACE:
-        await client.stop_scanning()
+        if scanning:
+            await client.stop_scanning()
         await client.disconnect()
         print("Disconnected.")
+
+    window.close()
+    print("Quitting.")
 
 asyncio.run(main(), debug=False)
