@@ -11,12 +11,14 @@ import ow_cv_class
 #Global variables
 config = configparser.ConfigParser()
 config.read(ow_cv_class.resource_path('config.ini'))
+OUTPUT_WINDOW_ENABLED = config["demo"].getboolean("OUTPUT_WINDOW_ENABLED")
 BEEP_ENABLED = config["demo"].getboolean("BEEP_ENABLED")
 KEEP_ALIVE = config["demo"].getfloat("KEEP_ALIVE")
 devices = []
 current_intensity = 0
 intensity_tracker = {}
 last_command_time = 0
+
 
 #Set up GUI
 sg.theme("DarkAmber")
@@ -25,8 +27,10 @@ layout = [
     [sg.Text("Current intensity:"), sg.Text("0%", size=(17,1), key="-CURRENT_INTENSITY-")],
     [sg.Text("Program status:"), sg.Text("READY", size=(15,1), key="-PROGRAM_STATUS-")],
     [sg.Button("Start"), sg.Button("Stop", disabled=True), sg.Button("Quit")]]
-window = sg.Window("Demo", layout, finalize=True)#, grab_anywhere=True)
 
+if OUTPUT_WINDOW_ENABLED:
+    layout.insert(0, [sg.Multiline(size=(60,15), disabled=True, reroute_stdout=True, autoscroll=True)])
+window = sg.Window("Demo", layout, finalize=True)
 
 def device_added(emitter, dev: bp.ButtplugClientDevice):
     devices.append(dev)
@@ -39,7 +43,7 @@ def device_removed(emitter, dev: bp.ButtplugClientDevice):
 
 def limit_intensity(intensity):
     if intensity > 1:
-        print(f"Intensity was {intensity} but it cannot be higher than 1. Setting it to 1.")
+        #print(f"Intensity was {intensity} but it cannot be higher than 1. Setting it to 1.")
         intensity = 1
     elif intensity < 0:
         print(f"Intensity was {intensity} but it cannot be lower than 0. Setting it to 0.")
@@ -171,10 +175,11 @@ async def main():
         while True:
             event, values = window.read(timeout=100)
             if event == sg.WIN_CLOSED or event == "Quit":
+                window.close()
                 print("Window closed.")
                 break
 
-            elif event == "Start":
+            if event == "Start":
                 window["Stop"].update(disabled=False)
                 window["Start"].update(disabled=True)
                 window["-PROGRAM_STATUS-"].update("RUNNING")
@@ -272,17 +277,28 @@ async def main():
                         break
                     if event == "Stop":
                         await stop_all_devices()
-                        window["-PROGRAM_STATUS-"].update("STOPPED")
+                        window["-PROGRAM_STATUS-"].update("STOPPING")
                         window["Stop"].update(disabled=True)
-                        window["Start"].update(disabled=False)
+                        window["Quit"].update(disabled=True)
                         print("Stopped.")
+                        window.refresh()
                         break
 
-                player.stop_tracking()
-
+                if event == sg.WIN_CLOSED or event == "Quit":
+                    print("Window closed.")
+                    break
+                
                 duration = time.time() - start_time
-                print(f"Loops per second: {counter/(duration)}")
-                print(f"Average time: {round(1000 * (duration/counter), 4)}ms")
+                print(f"Loops completed: {counter}")
+                print(f"Loops per second: {round(counter/(duration), 2)}")
+                print(f"Average time: {round(1000 * (duration/counter), 2)}ms")
+                window.refresh()
+                
+                player.stop_tracking()
+                
+                window["-PROGRAM_STATUS-"].update("READY")
+                window["Quit"].update(disabled=False)
+                window["Start"].update(disabled=False)
 
     except Exception as ex:
         await stop_all_devices()
