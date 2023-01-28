@@ -15,8 +15,9 @@ Default settings:
 - **Damage boost beam:** +20% intensity while active
 
 Known Issues:
-- Only works on Windows
+- Some users have reported bugginess at resolutions other than 1920x1080. I'm looking into it.
 - Fails to launch if Intiface's server isn't running
 - Crashes shortly after launch if you don't have a device connected to Intiface (probably)
 - Detecting resurrect in Kiriko ult probably won't work
 - High latency to the game server causes Mercy's beam to reconnect to targets slower. This can cause temporary gaps in vibration.
+- Only works on Windows
