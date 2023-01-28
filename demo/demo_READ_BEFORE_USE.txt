@@ -13,12 +13,10 @@ SCREEN_WIDTH = 2560 (if your monitor is 2560x1440, or set some other value as pe
 SCREEN_HEIGHT = 1440 (if your monitor is 2560x1440, or set some other value as per your monitor)
 
 Notes:
-This is very much just a prototype/demo, I threw the vibrator part of this together in an afternoon
-It's mainly to give people in Furi's server something to play with and also I guess to demonstrate an example of integrating with my OW2 CV project
+This started out as a prototype/demo that I threw together in an afternoon, but I've been sucked into it so it's becoming a fully-fledged project now. New name and repo soon!
 
 Known Issues:
-- Fails to launch if Intiface's server is not running
-- Crashes shortly after launch if you don't have a device connected to Intiface (probably)
-- Detecting resurrect in Kiriko ult probably won't work
-- Operating systems other than Windows won't work
+- Bugginess at resolutions other than 1920x1080. I'm looking into it.
 - High latency to the game server causes Mercy's beam to reconnect to people slower when switching types. This can cause temporary gaps in vibration.
+- Detecting resurrect in Kiriko ult probably won't work.
+- Only works on Windows.
