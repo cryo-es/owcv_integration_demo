@@ -80,6 +80,12 @@ class Player:
 				else:
 					self.damage_beam_active_confs -= 1
 
+	def start_tracking(self, refresh_rate):
+		self.owcv.start_capturing(refresh_rate)
+
+	def stop_tracking(self):
+		self.owcv.stop_capturing()
+
 	def benchmark(self, rounds=10):
 		start_time = time.time()
 		for i in range(0, rounds):
