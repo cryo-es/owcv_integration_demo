@@ -15,7 +15,7 @@ Default settings:
 - **Damage boost beam:** +20% intensity while active
 
 Known Issues:
-- Bugginess at resolutions other than 1920x1080. I should have a fix soon.
+- Bugginess at resolutions other than 1920x1080, including zero detection of Mercy's heal beam. I should have a fix soon.
 - Detecting resurrect in Kiriko ult probably won't work.
 - High latency to the game server causes Mercy's beam to reconnect to people slower when switching types. This can cause temporary gaps in vibration.
 - Only works on Windows.
