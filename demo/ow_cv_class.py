@@ -37,8 +37,8 @@ class ComputerVision:
 		self.screen = dxcam.create(output_color="GRAY")
 		self.frame = []
 
-	def start_capturing(self, capture_fps=60):
-		self.screen.start(target_fps=capture_fps, video_mode=True)
+	def start_capturing(self, target_fps=60):
+		self.screen.start(target_fps=target_fps, video_mode=True)
 
 	def stop_capturing(self):
 		self.screen.stop()
