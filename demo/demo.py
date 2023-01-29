@@ -14,6 +14,7 @@ config.read(ow_cv_class.resource_path('config.ini'))
 OUTPUT_WINDOW_ENABLED = config["demo"].getboolean("OUTPUT_WINDOW_ENABLED")
 BEEP_ENABLED = config["demo"].getboolean("BEEP_ENABLED")
 KEEP_ALIVE = config["demo"].getfloat("KEEP_ALIVE")
+MIN_INTENSITY_STEP = config["demo"].getfloat("MIN_INTENSITY_STEP")
 devices = []
 current_intensity = 0
 intensity_tracker = {}
@@ -68,7 +69,7 @@ async def prevent_disconnection(time):
 async def alter_intensity(amount):
     global current_intensity
     global last_command_time
-    current_intensity = round(current_intensity + amount, 1)
+    current_intensity = MIN_INTENSITY_STEP * round((current_intensity + amount) / MIN_INTENSITY_STEP, 0)
     print(f"Current intensity: {current_intensity}")
     real_intensity = limit_intensity(current_intensity)
     print(f"Real intensity:    {real_intensity}")
