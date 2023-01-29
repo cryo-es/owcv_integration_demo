@@ -16,6 +16,5 @@ Default settings:
 
 Known Issues:
 - Tab can be abused to re-trigger detection multiple times on the same elimination/assist message.
-- Detecting resurrect in Kiriko ult probably won't work.
 - High latency to the game server causes Mercy's beam to reconnect to people slower when switching types. This can cause temporary gaps in vibration.
 - Only works on Windows.
