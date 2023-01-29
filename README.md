@@ -9,13 +9,13 @@ Requires [Intiface Central](https://intiface.com/central/)  if you want to use i
 
 Default settings:
 - **Elimination:** +30% intensity for 6 seconds
-- **Assist:** +10% intensity for 3 seconds
+- **Assist:** +15% intensity for 3 seconds
 - **Resurrect:** +100% intensity for 4 seconds
 - **Heal beam:** +10% intensity while active
-- **Damage boost beam:** +20% intensity while active
+- **Damage boost beam:** +30% intensity while active
 
 Known Issues:
-- Mercy's beam is not detected when the resolution is 2560x1440.
+- Tab can be abused to re-trigger detection multiple times on the same elimination/assist message.
 - Detecting resurrect in Kiriko ult probably won't work.
 - High latency to the game server causes Mercy's beam to reconnect to people slower when switching types. This can cause temporary gaps in vibration.
 - Only works on Windows.
